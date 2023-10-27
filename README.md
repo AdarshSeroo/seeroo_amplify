@@ -44,18 +44,9 @@ file = File(result.files.single.path);
 // User canceled the picker
 }
 
-UploadData uploadData = UploadData(
-  url: 'https://mytestbucket.s3.amazonaws.com/',
-  fields: {
-    "key": "inputdata/user1/myDataFile.xlsx",
-    "AWSAccessKeyId": "ASIAABCXXXXXXXXXXXX",
-    "x-amz-security-token": "abcxyzloremipsum",
-    "policy": "abcxyzloremipsum",
-    "signature": "abcxyzloremipsum",
-  },
-);
+
 if(file!=null){
-await upload.uploadSelectFile(uploadData:uploadData,selectFile:file);
+await upload.uploadFile(selectedFile:file,fileType:"Video",isUploadFile:false,fileKey:'public/');
 }
 
 ```

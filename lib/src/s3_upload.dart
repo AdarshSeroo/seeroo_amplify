@@ -10,104 +10,31 @@ import 'package:mime/mime.dart';
 import 'package:path/path.dart';
 
 class S3Upload {
-  Future<(List<int>, String)> _getFileBytesAndName(Object? file) async {
-    List<int> bytes;
-    String fileName;
-
-    if (file is File && kIsWeb == false) {
-      bytes = await file.readAsBytes();
-      fileName = basename(file.path);
-    } else if (file is PlatformFile) {
-      if (kIsWeb) {
-        bytes = file.bytes!;
-      } else {
-        bytes = await _getFileBytes(file);
-      }
-      fileName = file.name;
-    } else {
-      throw Exception('Invalid file type');
-    }
-    return (bytes, fileName);
-  }
-
-  Future<List<int>> _getFileBytes(PlatformFile platformFile) async {
-    // Get the file path from the PlatformFile object
-    String? filePath = platformFile.path;
-
-    // Read the file as bytes, File is from the dart:io library
-    File file = File(filePath!);
-    List<int> fileBytes = await file.readAsBytes();
-
-    return fileBytes;
-  }
-
-  Map changeConfig({required String bucket, required String region}) {
-    Map map = {
-      "UserAgent": "aws-amplify-cli/2.0",
-      "Version": "1.0",
-      "auth": {
-        "plugins": {
-          "awsCognitoAuthPlugin": {
-            "UserAgent": "aws-amplify-cli/0.1.0",
-            "Version": "0.1.0",
-            "IdentityManager": {"Default": {}},
-            "CredentialsProvider": {
-              "CognitoIdentity": {
-                "Default": {
-                  "PoolId": "me-south-1:e4de7b2f-756c-4b03-8029-91c0a7eaf1b9",
-                  "Region": "me-south-1"
-                }
-              }
-            },
-            "CognitoUserPool": {
-              "Default": {
-                "PoolId": "me-south-1_GiSo5IuLt",
-                "AppClientId": "2mgqoan42vlntsf103prrdm2f0",
-                "Region": "me-south-1"
-              }
-            },
-            "Auth": {
-              "Default": {
-                "authenticationFlowType": "USER_SRP_AUTH",
-                "mfaConfiguration": "OFF",
-                "mfaTypes": ["SMS"],
-                "passwordProtectionSettings": {
-                  "passwordPolicyMinLength": 8,
-                  "passwordPolicyCharacters": []
-                },
-                "signupAttributes": ["EMAIL"],
-                "socialProviders": [],
-                "usernameAttributes": [],
-                "verificationMechanisms": ["EMAIL"]
-              }
-            },
-            "S3TransferUtility": {
-              "Default": {"Bucket": bucket, "Region": region}
-            }
-          }
-        }
-      },
-      "storage": {
-        "plugins": {
-          "awsS3StoragePlugin": {
-            "bucket": bucket,
-            "region": region,
-            "defaultAccessLevel": "guest"
-          }
-        }
-      }
-    };
-    return map;
-  }
+  ///call this method to upload file to AWS
+  ///
+  ///[selectedFile],[fileType],[fileKey] are mandatory.
+  ///
+  ///[selectedFile] : pass file picked by file_picker plugin.
+  ///
+  /// [fileType] : pass the file type of the file in this field.
+  /// This package used mime package under the hood,if the package fails to identify the mimetype value from this field is used.
+  ///
+  /// [isFileUpload] : if true Amplify.Storage.uploadFile method is used else Amplify.Storage.uploadData is used.
+  /// This field is false by default.
+  ///
+  /// [fileKey] :mandatory field which describes where the file will be stored.
+  ///
+  /// [onTransfer] : This method is triggered when transfer begins.
+  /// Use this to get total bytes of data to be uploaded and current transfer state
+  ///
+  ///
+  ///
 
   Future<StorageItem?> uploadFile({
     required PlatformFile selectedFile,
     required String fileType,
     bool isFileUpload = false,
-    bool isDefaultBucket = true,
-    String? customBucketName,
     required String fileKey,
-    String? region,
     void Function(StorageTransferProgress)? onTransfer,
   }) async {
     try {
@@ -177,5 +104,36 @@ class S3Upload {
           name: "SEEROOS3UPLOAD", stackTrace: s, error: e, level: 1200);
       return null;
     }
+  }
+
+  Future<(List<int>, String)> _getFileBytesAndName(Object? file) async {
+    List<int> bytes;
+    String fileName;
+
+    if (file is File && kIsWeb == false) {
+      bytes = await file.readAsBytes();
+      fileName = basename(file.path);
+    } else if (file is PlatformFile) {
+      if (kIsWeb) {
+        bytes = file.bytes!;
+      } else {
+        bytes = await _getFileBytes(file);
+      }
+      fileName = file.name;
+    } else {
+      throw Exception('Invalid file type');
+    }
+    return (bytes, fileName);
+  }
+
+  Future<List<int>> _getFileBytes(PlatformFile platformFile) async {
+    // Get the file path from the PlatformFile object
+    String? filePath = platformFile.path;
+
+    // Read the file as bytes, File is from the dart:io library
+    File file = File(filePath!);
+    List<int> fileBytes = await file.readAsBytes();
+
+    return fileBytes;
   }
 }
