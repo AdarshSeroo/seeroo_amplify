@@ -39,8 +39,8 @@ class S3Upload {
   }) async {
     try {
       late StorageItem item;
-      String key = fileKey;
-      key += DateTime.now().toString();
+      String key = basename(fileKey);
+      // key += DateTime.now().toString();
       Map<String, String> metadata = <String, String>{};
       final (selectedFileBytes, selectedFileName) =
           await _getFileBytesAndName(selectedFile);
