@@ -100,7 +100,7 @@ class S3Upload {
           name: "SEEROOS3UPLOAD");
       return item;
     } catch (e, s) {
-      log("exception occurred while uploading data $e",
+      log("exception occurred while uploading data ${e.toString()}",
           name: "SEEROOS3UPLOAD", stackTrace: s, error: e, level: 1200);
       return null;
     }
