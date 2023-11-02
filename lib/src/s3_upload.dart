@@ -103,6 +103,10 @@ class S3Upload {
             options: options,
             onProgress: (progress) {
               _transferState = progress.state;
+              final bytesSent = progress.transferredBytes;
+              final fileLength = progress.totalBytes;
+              log('I: Uploaded bytes: $bytesSent of $fileLength'
+                  ' (${(progress.fractionCompleted * 100).round()}%), of the "${awsFile.name}"');
               log("progress ${progress.transferredBytes}/${progress.totalBytes}",
                   name: "SEEROOS3UPLOAD");
 
@@ -111,9 +115,11 @@ class S3Upload {
               }
             }).result;
 
+        return item = op.uploadedItem;
+
         // if (op != null) {
-        final uploadFileResult = await _uploadFileOp!.result;
-        item = uploadFileResult.uploadedItem;
+        // final uploadFileResult = await _uploadFileOp!.result;
+        // item = uploadFileResult.uploadedItem;
         // }
       } else {
         final uploadDataOptions = StorageUploadDataOptions(
