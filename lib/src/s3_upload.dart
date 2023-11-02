@@ -29,6 +29,44 @@ class S3Upload {
   ///
   ///
   ///
+  ///
+  ///
+
+  StorageUploadDataOperation? _uploadDataOp;
+  StorageUploadFileOperation? _uploadFileOp;
+  StorageTransferState? _transferState;
+
+  Future pauseTransfer() async {
+    log("pauseTransfer called: uploadFileOp != null:${_uploadFileOp != null},$_transferState",
+        name: "SEEROOS3UPLOAD");
+    if (_uploadFileOp != null && _transferState != null) {
+      if (_transferState == StorageTransferState.inProgress) {
+        await _uploadFileOp!.pause();
+      }
+    }
+  }
+
+  Future cancelTransfer() async {
+    log("cancel transfer called", name: "SEEROOS3UPLOAD");
+
+    if (_uploadFileOp != null) {
+      await _uploadFileOp!.cancel();
+    }
+    if (_uploadDataOp != null) {
+      await _uploadDataOp!.cancel();
+    }
+  }
+
+  Future resumeTransfer() async {
+    log("resumeTransfer called uploadFileOp != null:${_uploadFileOp != null},$_transferState",
+        name: "SEEROOS3UPLOAD");
+
+    if (_uploadFileOp != null && _transferState != null) {
+      if (_transferState == StorageTransferState.paused) {
+        await _uploadFileOp!.resume();
+      }
+    }
+  }
 
   Future<StorageItem?> uploadFile({
     required PlatformFile selectedFile,
@@ -59,39 +97,45 @@ class S3Upload {
 
         final options = StorageUploadFileOptions(metadata: metadata);
 
-        final StorageUploadFileOperation operation = Amplify.Storage.uploadFile(
+        _uploadFileOp = Amplify.Storage.uploadFile(
             localFile: awsFile,
             key: key,
             options: options,
             onProgress: (progress) {
+              _transferState = progress.state;
               log("progress ${progress.transferredBytes}/${progress.totalBytes}",
                   name: "SEEROOS3UPLOAD");
+
               if (onTransfer != null) {
                 onTransfer(progress);
               }
             });
 
-        final uploadFileResult = await operation.result;
-        item = uploadFileResult.uploadedItem;
+        if (_uploadFileOp != null) {
+          final uploadFileResult = await _uploadFileOp!.result;
+          item = uploadFileResult.uploadedItem;
+        }
       } else {
         final uploadDataOptions = StorageUploadDataOptions(
             pluginOptions: const S3UploadDataPluginOptions(getProperties: true),
             metadata: metadata);
 
-        final uploadDataOperation = Amplify.Storage.uploadData(
+        final uploadDataOp = Amplify.Storage.uploadData(
             data: HttpPayload.bytes(selectedFileBytes,
                 contentType: mimeType ?? fileType),
             key: key,
             onProgress: (progress) {
               log("progress ${progress.transferredBytes}/${progress.totalBytes}",
                   name: "SEEROOS3UPLOAD");
+              _transferState = progress.state;
+
               if (onTransfer != null) {
                 onTransfer(progress);
               }
             },
             options: uploadDataOptions);
 
-        final uploadDataResult = await uploadDataOperation.result;
+        final uploadDataResult = await uploadDataOp.result;
 
         item = uploadDataResult.uploadedItem;
       }
