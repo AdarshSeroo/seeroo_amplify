@@ -97,7 +97,7 @@ class S3Upload {
 
         final options = StorageUploadFileOptions(metadata: metadata);
 
-        _uploadFileOp = Amplify.Storage.uploadFile(
+        StorageUploadFileResult op = await Amplify.Storage.uploadFile(
             localFile: awsFile,
             key: key,
             options: options,
@@ -109,12 +109,12 @@ class S3Upload {
               if (onTransfer != null) {
                 onTransfer(progress);
               }
-            });
+            }).result;
 
-        if (_uploadFileOp != null) {
-          final uploadFileResult = await _uploadFileOp!.result;
-          item = uploadFileResult.uploadedItem;
-        }
+        // if (op != null) {
+        final uploadFileResult = await _uploadFileOp!.result;
+        item = uploadFileResult.uploadedItem;
+        // }
       } else {
         final uploadDataOptions = StorageUploadDataOptions(
             pluginOptions: const S3UploadDataPluginOptions(getProperties: true),
